@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<project name="firelight-app" 
+			default="build-deploy" 
+			basedir=".">
+	<property file="build.properties" />
+
+	<target name="clean">
+		<exec dir="${project-dir}" executable="cmd">
+			<arg value="/C" />
+			<arg value="${maven-dir}\bin\mvn.cmd" />
+			<arg value="clean" />
+		</exec>
+	</target>
+
+	<target name="build">
+		<exec dir="${project-dir}" executable="cmd">
+			<arg value="/C" />
+			<arg value="${maven-dir}\bin\mvn.cmd" />
+			<arg value="clean"/>
+			<arg value="install"/>
+		</exec>
+	</target>
+
+	<target name="deploy">
+		<exec dir="${glassfish-dir}\bin" failonerror="true" executable="cmd.exe">
+			<arg value="/C" />
+			<arg value="asadmin --user ${gf-user} --passwordfile ${gf-password} --host ${gf-host} --port ${gf-port} deploy ${project-deploy}" />
+		</exec>
+	</target>
+
+	<target name="undeploy">
+		<exec dir="${glassfish-dir}\bin" failonerror="true" executable="cmd.exe">
+			<arg value="/C" />
+			<arg value="asadmin --user ${gf-user} --passwordfile ${gf-password} --host ${gf-host} --port ${gf-port} undeploy ${project-undeploy}" />
+		</exec>
+	</target>
+
+	<target name="deploy-web" depends="build, undeploy, deploy"></target>
+	<target name="build-deploy" depends="server-stop, build, server-start-debug, undeploy, deploy"></target>
+
+	<target name="copy-webapp">
+		<copydir src="${project-dir}\${project-name}\src\main\webapp" dest="${glassfish-dir}\domains\${gf-domain}\applications\${project-name}"></copydir>
+	</target>
+	
+	<target name="server-start">
+		<exec dir="${glassfish-dir}\bin" executable="cmd.exe">
+			<arg value="/C" />
+			<arg value="asadmin --user ${gf-user} --passwordfile ${gf-password} --host ${gf-host} start-domain ${gf-domain}" />
+		</exec>
+	</target>
+
+	<target name="server-stop">
+		<exec dir="${glassfish-dir}\bin" executable="cmd.exe">
+			<arg value="/C" />
+			<arg value="asadmin --user ${gf-user} --passwordfile ${gf-password} --host ${gf-host} stop-domain ${gf-domain}" />
+		</exec>
+	</target>
+	
+	<target name="server-restart" depends="server-stop, server-start"></target>
+	
+	<target name="server-start-debug" depends="server-clean">
+		<exec dir="${glassfish-dir}\bin" failonerror="true" executable="cmd.exe">
+			<arg value="/C" />
+			<arg value="asadmin --user ${gf-user} --passwordfile ${gf-password} --host ${gf-host} start-domain --debug=true ${gf-domain}" />
+		</exec>
+	</target>
+	
+	<target name="server-clean">
+		<delete dir="${glassfish-dir}/domains/firelight-server/applications/${project-name}"/>
+	</target>
+</project>
